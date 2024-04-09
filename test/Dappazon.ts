@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ContractTransactionResponse } from "ethers";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 import { Dappazon } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
@@ -17,11 +17,13 @@ const IMAGE =
 const COST = tokens(1);
 const RATING = 4;
 const STOCK = 5;
+const INSUFFICIENT_FUND = tokens(0.5);
 
 describe("Dappazon", () => {
   let dappazon: Dappazon & {
     deploymentTransaction(): ContractTransactionResponse;
   };
+  let dappazonAddress: string;
   let deployer: HardhatEthersSigner;
   let buyer: HardhatEthersSigner;
   let randomDude: HardhatEthersSigner;
@@ -33,6 +35,7 @@ describe("Dappazon", () => {
     // Deploy contract
     const Dappazon = await hre.ethers.getContractFactory("Dappazon");
     dappazon = await Dappazon.connect(deployer).deploy();
+    dappazonAddress = await dappazon.getAddress();
   });
 
   describe("Deployment", () => {
@@ -71,10 +74,114 @@ describe("Dappazon", () => {
           .list(ID + 1, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
         await transaction.wait();
       } catch (error) {
-        expect(error.message).to.include("Only Owner can List product");
+        expect(error.message).to.include("Only Owner");
         return;
       }
       expect.fail("randomDude should not be able to list");
+    });
+  });
+
+  describe("Buying", () => {
+    let transaction: ContractTransactionResponse;
+    beforeEach(async () => {
+      // List an item
+      transaction = await dappazon
+        .connect(deployer)
+        .list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
+      await transaction.wait();
+    });
+    it("Check Item Exist", async () => {
+      try {
+        transaction = await dappazon
+          .connect(buyer)
+          .buy(ID + 1, { value: COST });
+        await transaction.wait();
+      } catch (error) {
+        expect(error.message).to.include("Item not exist");
+        return;
+      }
+      expect.fail("insufficient funds should failed");
+    });
+    it("Check value", async () => {
+      try {
+        transaction = await dappazon
+          .connect(buyer)
+          .buy(ID, { value: INSUFFICIENT_FUND });
+        await transaction.wait();
+      } catch (error) {
+        expect(error.message).to.include("Insufficient Funds");
+        return;
+      }
+      expect.fail("insufficient funds should failed");
+    });
+
+    describe("Paid", () => {
+      let _transaction: ContractTransactionResponse;
+      beforeEach(async () => {
+        _transaction = await dappazon.connect(buyer).buy(ID, { value: COST });
+        await _transaction.wait();
+      });
+      it("Updates the contract balance", async () => {
+        const balance = await hre.ethers.provider.getBalance(dappazonAddress);
+        expect(balance).is.equal(COST);
+      });
+      it("Create an Order", async () => {
+        const orderCount = await dappazon.orderCount(buyer.address);
+        expect(orderCount).is.equal(1);
+
+        const order = await dappazon.orders(buyer.address, orderCount);
+        expect(order.time).to.be.greaterThan(0);
+        expect(order.item.name).to.be.equal(NAME);
+      });
+      it("Substrack stock", async () => {
+        const stock = (await dappazon.itemList(ID)).stock;
+        expect(stock).is.equal(STOCK - 1);
+      });
+      it("Emits Buy event", async () => {
+        const orderCount = await dappazon.orderCount(buyer.address);
+        expect(_transaction)
+          .to.emit(dappazon, "Buy")
+          .withArgs(buyer.address, orderCount, ID);
+      });
+    });
+  });
+
+  describe("Withdrawing", () => {
+    let transaction: ContractTransactionResponse;
+    let balanceBefore: BigInt;
+    beforeEach(async () => {
+      // List
+      transaction = await dappazon
+        .connect(deployer)
+        .list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
+      await transaction.wait();
+      // Buy
+      transaction = await dappazon.connect(buyer).buy(ID, { value: COST });
+      await transaction.wait();
+      // Record status
+      balanceBefore = await ethers.provider.getBalance(deployer.address);
+    });
+    it("Only Seller", async () => {
+      try {
+        transaction = await dappazon.connect(randomDude).withdraw();
+        await transaction.wait();
+      } catch (error) {
+        expect(error.message).to.include("Only Owner");
+        return;
+      }
+      expect.fail("Only seller could withdraw");
+    });
+    it("Updates the owner balance", async () => {
+      transaction = await dappazon.connect(deployer).withdraw();
+      await transaction.wait();
+      const balanceAfter = await ethers.provider.getBalance(deployer.address);
+      expect(balanceAfter).to.be.greaterThan(balanceBefore);
+    });
+    it("Updates the contract balance", async () => {
+      transaction = await dappazon.connect(deployer).withdraw();
+      await transaction.wait();
+      const balance = await ethers.provider.getBalance(dappazonAddress);
+      expect(balance).to.be.equal(0);
     });
   });
 });
