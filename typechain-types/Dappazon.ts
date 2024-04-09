@@ -3,10 +3,12 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
   Interface,
+  EventFragment,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -15,16 +17,55 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
+  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
 } from "./common";
 
 export interface DappazonInterface extends Interface {
-  getFunction(nameOrSignature: "name"): FunctionFragment;
+  getFunction(nameOrSignature: "itemList" | "list" | "owner"): FunctionFragment;
 
-  encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  getEvent(nameOrSignatureOrTopic: "List"): EventFragment;
 
-  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  encodeFunctionData(
+    functionFragment: "itemList",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "list",
+    values: [
+      BigNumberish,
+      string,
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
+  ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+
+  decodeFunctionResult(functionFragment: "itemList", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "list", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+}
+
+export namespace ListEvent {
+  export type InputTuple = [
+    name: string,
+    cost: BigNumberish,
+    quantity: BigNumberish
+  ];
+  export type OutputTuple = [name: string, cost: bigint, quantity: bigint];
+  export interface OutputObject {
+    name: string;
+    cost: bigint;
+    quantity: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface Dappazon extends BaseContract {
@@ -70,15 +111,96 @@ export interface Dappazon extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  name: TypedContractMethod<[], [string], "view">;
+  itemList: TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [bigint, string, string, string, bigint, bigint, bigint] & {
+        id: bigint;
+        name: string;
+        catagory: string;
+        image: string;
+        cost: bigint;
+        rating: bigint;
+        stock: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  list: TypedContractMethod<
+    [
+      _id: BigNumberish,
+      _name: string,
+      _catagory: string,
+      _image: string,
+      _cost: BigNumberish,
+      _rating: BigNumberish,
+      _stock: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  owner: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "name"
+    nameOrSignature: "itemList"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [bigint, string, string, string, bigint, bigint, bigint] & {
+        id: bigint;
+        name: string;
+        catagory: string;
+        image: string;
+        cost: bigint;
+        rating: bigint;
+        stock: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "list"
+  ): TypedContractMethod<
+    [
+      _id: BigNumberish,
+      _name: string,
+      _catagory: string,
+      _image: string,
+      _cost: BigNumberish,
+      _rating: BigNumberish,
+      _stock: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
 
-  filters: {};
+  getEvent(
+    key: "List"
+  ): TypedContractEvent<
+    ListEvent.InputTuple,
+    ListEvent.OutputTuple,
+    ListEvent.OutputObject
+  >;
+
+  filters: {
+    "List(string,uint256,uint256)": TypedContractEvent<
+      ListEvent.InputTuple,
+      ListEvent.OutputTuple,
+      ListEvent.OutputObject
+    >;
+    List: TypedContractEvent<
+      ListEvent.InputTuple,
+      ListEvent.OutputTuple,
+      ListEvent.OutputObject
+    >;
+  };
 }
