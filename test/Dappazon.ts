@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ContractTransactionResponse } from "ethers";
-import hre, { ethers } from "hardhat";
+import hre from "hardhat";
 import { Dappazon } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
@@ -74,7 +74,7 @@ describe("Dappazon", () => {
           .list(ID + 1, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
         await transaction.wait();
       } catch (error) {
-        expect(error.message).to.include("Only Owner");
+        expect((error as Error).message).to.include("Only Owner");
         return;
       }
       expect.fail("randomDude should not be able to list");
@@ -97,7 +97,7 @@ describe("Dappazon", () => {
           .buy(ID + 1, { value: COST });
         await transaction.wait();
       } catch (error) {
-        expect(error.message).to.include("Item not exist");
+        expect((error as Error).message).to.include("Item not exist");
         return;
       }
       expect.fail("insufficient funds should failed");
@@ -109,7 +109,7 @@ describe("Dappazon", () => {
           .buy(ID, { value: INSUFFICIENT_FUND });
         await transaction.wait();
       } catch (error) {
-        expect(error.message).to.include("Insufficient Funds");
+        expect((error as Error).message).to.include("Insufficient Funds");
         return;
       }
       expect.fail("insufficient funds should failed");
@@ -159,14 +159,14 @@ describe("Dappazon", () => {
       transaction = await dappazon.connect(buyer).buy(ID, { value: COST });
       await transaction.wait();
       // Record status
-      balanceBefore = await ethers.provider.getBalance(deployer.address);
+      balanceBefore = await hre.ethers.provider.getBalance(deployer.address);
     });
     it("Only Seller", async () => {
       try {
         transaction = await dappazon.connect(randomDude).withdraw();
         await transaction.wait();
       } catch (error) {
-        expect(error.message).to.include("Only Owner");
+        expect((error as Error).message).to.include("Only Owner");
         return;
       }
       expect.fail("Only seller could withdraw");
@@ -174,13 +174,15 @@ describe("Dappazon", () => {
     it("Updates the owner balance", async () => {
       transaction = await dappazon.connect(deployer).withdraw();
       await transaction.wait();
-      const balanceAfter = await ethers.provider.getBalance(deployer.address);
-      expect(balanceAfter).to.be.greaterThan(balanceBefore);
+      const balanceAfter = await hre.ethers.provider.getBalance(
+        deployer.address
+      );
+      expect(balanceAfter).to.be.greaterThan(Number(balanceBefore));
     });
     it("Updates the contract balance", async () => {
       transaction = await dappazon.connect(deployer).withdraw();
       await transaction.wait();
-      const balance = await ethers.provider.getBalance(dappazonAddress);
+      const balance = await hre.ethers.provider.getBalance(dappazonAddress);
       expect(balance).to.be.equal(0);
     });
   });
