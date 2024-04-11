@@ -3,7 +3,7 @@ import { DappazonProduct } from "./Product";
 const ProductList = ({ productList }: { productList: DappazonProduct[] }) => (
   <div className="flex items-center justify-around gap-6">
     {productList.map((product) => (
-      <Product product={product} />
+      <Product key={product.id} product={product} />
     ))}
   </div>
 );

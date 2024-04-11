@@ -1,16 +1,28 @@
+import { useEffect, useState } from "react";
 import Navigation from "./components/Navigation";
 import BestSellers from "./pages/BestSellers";
+import { getAccounts, onAccountsChanged } from "./libs/wallet";
 function App() {
+  const [accounts, setAccounts] = useState([""]);
+  const account = accounts[0];
+  const updateAccounts = async () => {
+    setAccounts(await getAccounts());
+  };
+  const onMounted = async () => {
+    updateAccounts();
+    onAccountsChanged(updateAccounts);
+  };
+  useEffect(() => {
+    onMounted();
+  }, []);
+
   return (
-    <div className="bg-white w-full h-screen">
-      <header></header>
-      <body className="relative">
-        <Navigation />
-        <section className="flex flex-col items-center mt-[100px]">
-          <BestSellers />
-        </section>
-      </body>
-    </div>
+    <main className="bg-white w-full h-screen">
+      <Navigation account={account} />
+      <section className="flex flex-col items-center mt-[100px]">
+        <BestSellers />
+      </section>
+    </main>
   );
 }
 
