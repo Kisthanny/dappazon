@@ -27,7 +27,7 @@ export declare namespace Dappazon {
   export type ItemStruct = {
     id: BigNumberish;
     name: string;
-    catagory: string;
+    category: string;
     image: string;
     cost: BigNumberish;
     rating: BigNumberish;
@@ -37,7 +37,7 @@ export declare namespace Dappazon {
   export type ItemStructOutput = [
     id: bigint,
     name: string,
-    catagory: string,
+    category: string,
     image: string,
     cost: bigint,
     rating: bigint,
@@ -45,7 +45,7 @@ export declare namespace Dappazon {
   ] & {
     id: bigint;
     name: string;
-    catagory: string;
+    category: string;
     image: string;
     cost: bigint;
     rating: bigint;
@@ -199,7 +199,7 @@ export interface Dappazon extends BaseContract {
       [bigint, string, string, string, bigint, bigint, bigint] & {
         id: bigint;
         name: string;
-        catagory: string;
+        category: string;
         image: string;
         cost: bigint;
         rating: bigint;
@@ -213,7 +213,7 @@ export interface Dappazon extends BaseContract {
     [
       _id: BigNumberish,
       _name: string,
-      _catagory: string,
+      _category: string,
       _image: string,
       _cost: BigNumberish,
       _rating: BigNumberish,
@@ -258,7 +258,7 @@ export interface Dappazon extends BaseContract {
       [bigint, string, string, string, bigint, bigint, bigint] & {
         id: bigint;
         name: string;
-        catagory: string;
+        category: string;
         image: string;
         cost: bigint;
         rating: bigint;
@@ -273,7 +273,7 @@ export interface Dappazon extends BaseContract {
     [
       _id: BigNumberish,
       _name: string,
-      _catagory: string,
+      _category: string,
       _image: string,
       _cost: BigNumberish,
       _rating: BigNumberish,

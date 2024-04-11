@@ -14,7 +14,7 @@ contract Dappazon {
     struct Item {
         uint256 id;
         string name;
-        string catagory;
+        string category;
         string image;
         uint256 cost;
         uint256 rating;
@@ -42,7 +42,7 @@ contract Dappazon {
     function list(
         uint256 _id,
         string memory _name,
-        string memory _catagory,
+        string memory _category,
         string memory _image,
         uint256 _cost,
         uint256 _rating,
@@ -52,7 +52,7 @@ contract Dappazon {
         Item memory item = Item(
             _id,
             _name,
-            _catagory,
+            _category,
             _image,
             _cost,
             _rating,

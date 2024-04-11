@@ -1,7 +1,6 @@
 import ProductList from "../components/ProductList";
-import { bestSellers } from "../components/Navigation";
-
-const BestSellers = () => {
+import { BestSeller } from "../components/Navigation";
+const BestSellers = ({ bestSellers }: { bestSellers: BestSeller[] }) => {
   return (
     <section className="w-[1250px]">
       <h3 className="text-4xl font-bold py-6">Dappazon Best Sellers</h3>

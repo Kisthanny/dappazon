@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+
 export const requestAccounts = async () => {
     try {
         const ethereum = window.ethereum;
