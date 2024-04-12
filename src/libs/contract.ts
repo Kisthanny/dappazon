@@ -1,7 +1,23 @@
-import { Contract, ethers } from "ethers"
+import { BigNumberish, Contract, ethers } from "ethers"
 import ContractConfig from "../config";
 import DappazonAbi from "../abis/Dappazon.json"
-import { DappazonProduct } from "../components/Product";
+
+import { Dappazon } from "../../typechain-types/Dappazon"
+
+export type DappazonProduct = {
+    id: BigNumberish;
+    name: string;
+    category: string;
+    image: string;
+    cost: string;
+    rating: BigNumberish;
+    stock: BigNumberish;
+};
+
+export type Order = {
+    time: BigNumberish;
+    item: DappazonProduct;
+};
 
 export const getProvider = () => {
     if (window.ethereum === undefined) {
@@ -15,15 +31,27 @@ export const getSigner = async () => {
         throw new Error('Please install Metamask')
     }
     const provider = new ethers.BrowserProvider(window.ethereum);
-    return provider.getSigner();
+    return await provider.getSigner();
+}
+
+export const formatTimestamp = (timestamp: BigNumberish) => {
+    return new Date(
+        Number(timestamp.toString() + "000")
+    ).toLocaleDateString(undefined, {
+        weekday: "long",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+    });
 }
 
 export const getDappazon = () => {
-    return new Contract(
+    const dappazon = new Contract(
         ContractConfig[31337].dappazon.address,
         DappazonAbi,
         getProvider()
     );
+    return dappazon as unknown as Dappazon
 }
 
 export const computeBestSellers = (list: DappazonProduct[]) => {
@@ -39,9 +67,27 @@ export const computeBestSellers = (list: DappazonProduct[]) => {
             productList: list.filter((item) => item.category === "electronics"),
         },
         {
-            name: "Toys & Robots",
+            name: "Toys & Gaming",
             hash: "#toys",
             productList: list.filter((item) => item.category === "toys"),
         },
     ];
 };
+export const dappazonBuy = async (product: DappazonProduct) => {
+    const dappazon = getDappazon();
+    const signer = await getSigner();
+    const transaction = await dappazon.connect(signer).buy(product.id, { value: product.cost })
+    await transaction.wait();
+}
+
+export const getOrders = async () => {
+    const dappazon = getDappazon();
+    const signer = await getSigner();
+    const orderCount = await dappazon.orderCount(signer.address);
+    const orderList = [] as Order[];
+    for (let orderIndex = 1; orderIndex <= orderCount; orderIndex++) {
+        const order = await dappazon.orders(signer.address, orderIndex)
+        orderList.push(order as unknown as Order)
+    }
+    return orderList;
+}

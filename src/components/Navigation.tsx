@@ -1,5 +1,5 @@
 import { formatAddress, requestAccounts } from "../libs/wallet";
-import { DappazonProduct } from "./Product";
+import { DappazonProduct } from "../libs/contract";
 
 export type BestSeller = {
   name: string;

@@ -58,7 +58,7 @@ describe("Dappazon", () => {
       const beer = await dappazon.itemList(1);
       expect(beer.id).is.equal(ID);
       expect(beer.name).is.equal(NAME);
-      expect(beer.catagory).is.equal(CATEGORY);
+      expect(beer.category).is.equal(CATEGORY);
       expect(beer.image).is.equal(IMAGE);
       expect(beer.cost).is.equal(COST);
       expect(beer.rating).is.equal(RATING);

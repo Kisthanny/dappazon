@@ -89,7 +89,7 @@ contract Dappazon {
         itemList[_id].stock = item.stock - 1;
 
         // Emit event
-        // emit Buy(msg.sender, orderCount[msg.sender], item.id);
+        emit Buy(msg.sender, orderCount[msg.sender], item.id);
     }
 
     // Withdraw funds

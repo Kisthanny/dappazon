@@ -1,5 +1,5 @@
 import Product from "./Product";
-import { DappazonProduct } from "./Product";
+import { DappazonProduct } from "../libs/contract";
 const ProductList = ({ productList }: { productList: DappazonProduct[] }) => (
   <div className="flex items-center justify-around gap-6">
     {productList.map((product) => (
